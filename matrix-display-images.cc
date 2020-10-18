@@ -11,13 +11,16 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <stdbool.h>
-#include <png.h>
 #include <zlib.h>
+#include <png.h>
 
 #define PNG_ERROR -2
 #define NOT_PNG -1
 #define PNG_OK 0
 
+#define CFG_ERROR -2
+#define CFG_MISSING -1
+#define CFG_OK 0
 
 /* Can show single file and wait for key press
  * Show a directory one and wait for key press
@@ -42,6 +45,40 @@ static void InterruptHandler(int signo) {
 }
 
 
+struct SVRConfig {
+	char  directory[200];
+	char  prefix[40];
+	int	  ms_delay;
+	int   img_number;
+   	};
+
+   	
+int loadConfig (struct SVRConfig *svr_config, const char *file_name) {
+	FILE *fp;
+	char line[1024];
+	//char *pos;
+	
+	if ((fp = fopen(file_name, "r")) == NULL)
+		return (CFG_MISSING);
+	
+	
+    while( fgets(line,1024,fp) ) {
+        // if comment / empty line (min 3 chars a=b)
+        if (line[0] == '#' || strlen(line) < 3) continue;
+        // strip new line
+        //if ((pos=strchr(Name, '\n')) != NULL) pos = '\0';
+        // Use sscanf to check for each possible entry
+        sscanf (line, "directory=%s\n", svr_config->directory);
+        sscanf (line, "prefix=%s\n", svr_config->prefix);
+        sscanf (line, "position=%d\n", &svr_config->img_number);
+        sscanf (line, "delay=%d\n", &svr_config->ms_delay);
+        // Any other lines are ignored
+    }
+	
+	fclose(fp);
+	return CFG_OK;
+}
+
 /* Loads a png image and displays on canvas */
 // Image should be at least size of display. If oversized then just displays top left of image
 int displayPng(Canvas *canvas, const char *file_name) /* We need to open the file */
@@ -56,10 +93,7 @@ int displayPng(Canvas *canvas, const char *file_name) /* We need to open the fil
    if ((fp = fopen(file_name, "rb")) == NULL)
       return (PNG_ERROR);
 
-	// Fill if background needed
-  //canvas->Fill(0, 0, 255);
-
-
+  
 	 png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
    if (png_ptr == NULL)
@@ -198,12 +232,15 @@ int main(int argc, char *argv[]) {
   defaults.parallel = 1;
   defaults.show_refresh_rate = false;
 	rgb_matrix::RuntimeOptions runtime_opt;
-	char full_path[200];
+	// Holds the full path including filename of the file to be shown (changes for each file)
+	char full_path[255];
   //Canvas *canvas = rgb_matrix::CreateMatrixFromFlags(&argc, &argv, &defaults);
 	int mode = DEFAULT_MODE;
-	char prefix[20] = "";
-	char directory [150] = "";
-	char *configfile, *filename;
+	// max limits for prefix and directoryf names - these should not be exceeded
+	char prefix[40] = "";
+	char directory [200] = "";
+	char *configfile = NULL; 
+	char *filename;
 	// Default = 1sec delay between images
 	int ms_delay = 1000;
 	// position of image to show
@@ -243,13 +280,25 @@ int main(int argc, char *argv[]) {
 				break;
 			case 'd':
 			  if (mode != SERVER_MODE) mode = DIRECTORY_RPT;
+			  	if (strlen(optarg) > 199) {
+			  		printf ("Directory string too long\n");
+			  		break;
+			  	}
 				strcpy (directory, optarg);
 				break;
 			case 'D':
 			  if (mode != SERVER_MODE) mode = DIRECTORY_ONCE;
+			  	if (strlen(optarg) > 199) {
+			  		printf ("Directory string too long\n");
+			  		break;
+			  	}
 				strcpy (directory, optarg);
 				break;
 			case 'p':
+			  	if (strlen(optarg) > 49) {
+			  		printf ("Directory string too long\n");
+			  		break;
+			  	}
 				strcpy (prefix, optarg);
 				break;
 			case 'm':
@@ -270,10 +319,89 @@ int main(int argc, char *argv[]) {
 
   // Default is server mode
 	if (mode == DEFAULT_MODE) mode = SERVER_MODE;
+		
+	
+	
+	if (mode == SERVER_MODE) {
+		SVRConfig svr_config; 
+		char config_file [255];
+		// Set defaults on config
+		strcpy (svr_config.directory, "");
+		strcpy (svr_config.prefix, "");
+		svr_config.img_number = 1;
+		svr_config.ms_delay = 1000;	// default 1 sec delay
+		int success;
+		// time and attrib of file (used to check for updates)
+		struct stat attrib;
+		time_t last_modified;
+
+		// If config provided on command line use that, otherwise use current path and "display-image.cfg"
+		if (configfile != NULL) {
+			strcpy (config_file, configfile);
+		}
+		else {
+			char *last_pos = strrchr( argv[0], '/' );
+			if (last_pos != NULL) {
+				strncpy ( config_file, argv[0], last_pos + 1 - argv[0] );
+				config_file[last_pos + 1 - argv[0]] = '\0'; 
+			}
+			strcat (config_file, "display-image.cfg");
+		}
+		// Now have name of config file - either from -c or from path of executable file
+	
+		success = loadConfig (&svr_config, config_file); 
+		
+		stat(config_file, &attrib);
+		last_modified = attrib.st_mtime;
+		
+		if (success == CFG_MISSING) {
+			printf ("Unable to find config file %s\n", config_file);
+			exit (1);
+		}
+		else if (success == CFG_ERROR) {
+			printf ("Corrupt config file %s\n", config_file);
+			exit (1);
+		}
+		
+		
+		// Start server mode
+		while (1) {
+			// Check if config file changed and if so reload
+			stat(config_file, &attrib);
+			if (attrib.st_mtime > last_modified) {
+				// Does not check if file loaded correctly
+				// If unable to load update then ignore
+				loadConfig (&svr_config, config_file);
+				last_modified = attrib.st_mtime;
+			}
+
+			
+			// If no file then go back to 1 and try again
+			if (!checkFileExist (full_path, svr_config.directory, svr_config.prefix, svr_config.img_number)) {
+				svr_config.img_number = 1;
+				// generate filename - if initial file doesn't exist then wait 1 sec and return to start to try again
+				// alternative would be to display an error or perhaps test message
+				if (!checkFileExist (full_path, svr_config.directory, svr_config.prefix, svr_config.img_number)) {
+					usleep (1000);
+					continue;
+				}
+			}
+			// Display the file
+			success = displayPng(canvas, full_path);
+			// This error is a warning - 
+			if (success != PNG_OK) printf ("Error displaying file %s\n", full_path);
+	
+			// Increment the count
+			img_number ++;
+			// Wait for delay ms before showing next image
+			usleep (svr_config.ms_delay * 1000);	
+		}		
+	}
+	
 
 
 	// Single file
-	if (mode == SINGLE_IMG) {
+	else if (mode == SINGLE_IMG) {
 
 		printf ("Displaying single image %s\n", filename);
 
@@ -284,32 +412,32 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Directory is the same, but breaks out if once
-	if (mode == DIRECTORY_RPT || mode == DIRECTORY_ONCE){
+	else if (mode == DIRECTORY_RPT || mode == DIRECTORY_ONCE){
 
-	while (1) {
-
-		// If no file then go back to zero and try again
-		if (!checkFileExist (full_path, directory, prefix, img_number)) {
-			// Unless this is one time only in which case exit here
-			if (mode == DIRECTORY_ONCE) {exit(0);}
-			img_number = 1;
-			// generate filename - if initial file doesn't exist then exit
+		while (1) {
+	
+			// If no file then go back to 1 and try again
 			if (!checkFileExist (full_path, directory, prefix, img_number)) {
-				printf ("File %s not found\n", full_path);
-				exit(0);
+				// Unless this is one time only in which case exit here
+				if (mode == DIRECTORY_ONCE) {exit(0);}
+				img_number = 1;
+				// generate filename - if initial file doesn't exist then exit
+				if (!checkFileExist (full_path, directory, prefix, img_number)) {
+					printf ("File %s not found\n", full_path);
+					exit(0);
+				}
 			}
+			// Display the file
+			success = displayPng(canvas, full_path);
+			// This error is a warning - only exit on file 1 not found
+			if (success != PNG_OK) printf ("Error displaying file %s\n", full_path);
+	
+			// Increment the count
+			img_number ++;
+			// Wait for delay ms before showing next image
+			usleep (ms_delay * 1000);
+	
 		}
-		// Display the file
-		success = displayPng(canvas, full_path);
-		// This error is a warning - only exit on file 0 not found
-		if (success != PNG_OK) printf ("Error displaying file %s\n", full_path);
-
-		// Increment the count
-		img_number ++;
-		// Wait for delay ms before showing next image
-		usleep (ms_delay * 1000);
-
-	}
 	}
 
   // Animation finished. Shut down the RGB matrix.
