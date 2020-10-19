@@ -337,6 +337,8 @@ int main(int argc, char *argv[]) {
 		strcpy (svr_config.prefix, "");
 		svr_config.img_number = 1;
 		svr_config.ms_delay = 1000;	// default 1 sec delay
+		// offset used for long delays
+		int delay_offset = 0;
 		int success;
 		// time and attrib of file (used to check for updates)
 		struct stat attrib;
@@ -382,29 +384,47 @@ int main(int argc, char *argv[]) {
 				success = loadConfig (&svr_config, config_file);
 				if (debug > 0 && success != CFG_OK) printf ("Warning error reading config %s %d \n", config_file, success);
 				last_modified = attrib.st_mtime;
+				
+				// reset delay_offset
+				delay_offset = 0;
 			}
 
-
-			// If no file then go back to 1 and try again
-			if (!checkFileExist (full_path, svr_config.directory, svr_config.prefix, svr_config.img_number)) {
-				svr_config.img_number = 1;
-				// generate filename - if initial file doesn't exist then wait 1 sec and return to start to try again
-				// alternative would be to display an error or perhaps test message
-				if (!checkFileExist (full_path, svr_config.directory, svr_config.prefix, svr_config.img_number)) {
-					usleep (1000);
-					continue;
-				}
-			}
-			// Display the file
-			if (debug > 1) printf ("Displaying file %s \n", full_path);
-			success = displayPng(canvas, full_path);
-			// This error is a warning -
-			if (success != PNG_OK) printf ("Error displaying file %s\n", full_path);
-
-			// Increment the count
-			svr_config.img_number ++;
+			// if last image has expired then delay_offset will be 0 - so show next
+			if (delay_offset == 0) {
+			
+                // If no file then go back to 1 and try again
+                if (!checkFileExist (full_path, svr_config.directory, svr_config.prefix, svr_config.img_number)) {
+                    svr_config.img_number = 1;
+                    // generate filename - if initial file doesn't exist then wait 1 sec and return to start to try again
+                    // alternative would be to display an error or perhaps test message
+                    if (!checkFileExist (full_path, svr_config.directory, svr_config.prefix, svr_config.img_number)) {
+                        usleep (1000);
+                        continue;
+                    }
+                }
+                // Display the file
+                if (debug > 1) printf ("Displaying file %s \n", full_path);
+                success = displayPng(canvas, full_path);
+                // This error is a warning -
+                if (success != PNG_OK) printf ("Error displaying file %s\n", full_path);
+                
+                // Increment the count
+                svr_config.img_number ++;
+                
+		    }
+			
 			// Wait for delay ms before showing next image
-			usleep (svr_config.ms_delay * 1000);
+			// if delay longer then 1 sec then recheck config after each sec
+			if (svr_config.ms_delay - delay_offset <= 1000) {
+			    usleep ((svr_config.ms_delay - delay_offset) * 1000);
+			    delay_offset = 0;
+			}
+			else {
+			    // maximum sleep is 1 sec (1M micro seconds)
+			    // if longer then check for update config file 
+			    usleep (1000000);
+			    delay_offset += 1000;
+			}
 		}
 	}
 

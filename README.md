@@ -88,3 +88,6 @@ The display is designed for non-interlaced images with no transparency. If image
 In some circumstances the Ctrl-C does not cancel the program. In that case Ctrl-Z can be used and then the program can be stopped using `kill`.
 
 
+## More Information
+
+For more information see my website at: [PenguinTutor RGB LED Matrix display](http://www.penguintutor.com/projects/rpi-matrix-rgbled)
