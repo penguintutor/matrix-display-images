@@ -52,16 +52,16 @@ struct SVRConfig {
 	int   img_number;
    	};
 
-   	
+
 int loadConfig (struct SVRConfig *svr_config, const char *file_name) {
 	FILE *fp;
 	char line[1024];
 	//char *pos;
-	
+
 	if ((fp = fopen(file_name, "r")) == NULL)
 		return (CFG_MISSING);
-	
-	
+
+
     while( fgets(line,1024,fp) ) {
         // if comment / empty line (min 3 chars a=b)
         if (line[0] == '#' || strlen(line) < 3) continue;
@@ -74,7 +74,7 @@ int loadConfig (struct SVRConfig *svr_config, const char *file_name) {
         sscanf (line, "delay=%d\n", &svr_config->ms_delay);
         // Any other lines are ignored
     }
-	
+
 	fclose(fp);
 	return CFG_OK;
 }
@@ -93,7 +93,7 @@ int displayPng(Canvas *canvas, const char *file_name) /* We need to open the fil
    if ((fp = fopen(file_name, "rb")) == NULL)
       return (PNG_ERROR);
 
-  
+
 	 png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
    if (png_ptr == NULL)
@@ -239,13 +239,14 @@ int main(int argc, char *argv[]) {
 	// max limits for prefix and directoryf names - these should not be exceeded
 	char prefix[40] = "";
 	char directory [200] = "";
-	char *configfile = NULL; 
+	char *configfile = NULL;
 	char *filename;
 	// Default = 1sec delay between images
 	int ms_delay = 1000;
 	// position of image to show
 	int img_number = 1;
 	int success;
+	int debug = 0;
 
 
   // Extract the command line flags that contain
@@ -268,7 +269,7 @@ int main(int argc, char *argv[]) {
 	// -p = prefix (directory and server only)
 	// config = servermode
 	// -m = ms delay between images
-	while ((opt = getopt(argc, argv, "c:d:D:f:m:p:")) != -1){
+	while ((opt = getopt(argc, argv, "vVc:d:D:f:m:p:")) != -1){
     switch (opt) {
 			case 'c':
 				mode = SERVER_MODE;
@@ -304,6 +305,12 @@ int main(int argc, char *argv[]) {
 			case 'm':
 				ms_delay = atoi(optarg);
 				break;
+			case 'v':
+				debug += 1;
+				break;
+			case 'V':
+				debug += 2;
+				break;
 
 		}
 	}
@@ -319,11 +326,11 @@ int main(int argc, char *argv[]) {
 
   // Default is server mode
 	if (mode == DEFAULT_MODE) mode = SERVER_MODE;
-		
-	
-	
+
+
+
 	if (mode == SERVER_MODE) {
-		SVRConfig svr_config; 
+		SVRConfig svr_config;
 		char config_file [255];
 		// Set defaults on config
 		strcpy (svr_config.directory, "");
@@ -343,17 +350,17 @@ int main(int argc, char *argv[]) {
 			char *last_pos = strrchr( argv[0], '/' );
 			if (last_pos != NULL) {
 				strncpy ( config_file, argv[0], last_pos + 1 - argv[0] );
-				config_file[last_pos + 1 - argv[0]] = '\0'; 
+				config_file[last_pos + 1 - argv[0]] = '\0';
 			}
 			strcat (config_file, "display-image.cfg");
 		}
 		// Now have name of config file - either from -c or from path of executable file
-	
-		success = loadConfig (&svr_config, config_file); 
-		
+		if (debug > 0) printf ("Loading config %s \n", config_file);
+		success = loadConfig (&svr_config, config_file);
+
 		stat(config_file, &attrib);
 		last_modified = attrib.st_mtime;
-		
+
 		if (success == CFG_MISSING) {
 			printf ("Unable to find config file %s\n", config_file);
 			exit (1);
@@ -362,20 +369,22 @@ int main(int argc, char *argv[]) {
 			printf ("Corrupt config file %s\n", config_file);
 			exit (1);
 		}
-		
-		
+
+
 		// Start server mode
 		while (1) {
 			// Check if config file changed and if so reload
 			stat(config_file, &attrib);
 			if (attrib.st_mtime > last_modified) {
 				// Does not check if file loaded correctly
+				if (debug > 0) printf ("Updating config %s \n", config_file);
 				// If unable to load update then ignore
-				loadConfig (&svr_config, config_file);
+				success = loadConfig (&svr_config, config_file);
+				if (debug > 0 && success != CFG_OK) printf ("Warning error reading config %s %d \n", config_file, success);
 				last_modified = attrib.st_mtime;
 			}
 
-			
+
 			// If no file then go back to 1 and try again
 			if (!checkFileExist (full_path, svr_config.directory, svr_config.prefix, svr_config.img_number)) {
 				svr_config.img_number = 1;
@@ -387,17 +396,18 @@ int main(int argc, char *argv[]) {
 				}
 			}
 			// Display the file
+			if (debug > 1) printf ("Displaying file %s \n", full_path);
 			success = displayPng(canvas, full_path);
-			// This error is a warning - 
+			// This error is a warning -
 			if (success != PNG_OK) printf ("Error displaying file %s\n", full_path);
-	
+
 			// Increment the count
-			img_number ++;
+			svr_config.img_number ++;
 			// Wait for delay ms before showing next image
-			usleep (svr_config.ms_delay * 1000);	
-		}		
+			usleep (svr_config.ms_delay * 1000);
+		}
 	}
-	
+
 
 
 	// Single file
@@ -415,7 +425,7 @@ int main(int argc, char *argv[]) {
 	else if (mode == DIRECTORY_RPT || mode == DIRECTORY_ONCE){
 
 		while (1) {
-	
+
 			// If no file then go back to 1 and try again
 			if (!checkFileExist (full_path, directory, prefix, img_number)) {
 				// Unless this is one time only in which case exit here
@@ -431,12 +441,12 @@ int main(int argc, char *argv[]) {
 			success = displayPng(canvas, full_path);
 			// This error is a warning - only exit on file 1 not found
 			if (success != PNG_OK) printf ("Error displaying file %s\n", full_path);
-	
+
 			// Increment the count
 			img_number ++;
 			// Wait for delay ms before showing next image
 			usleep (ms_delay * 1000);
-	
+
 		}
 	}
 
