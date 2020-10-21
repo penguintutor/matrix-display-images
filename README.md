@@ -87,6 +87,7 @@ The display is designed for non-interlaced images with no transparency. If image
 
 In some circumstances the Ctrl-C does not cancel the program. In that case Ctrl-Z can be used and then the program can be stopped using `kill`.
 
+There is limited error handling for the configuration file. It is designed for the configuration file to be created through code (eg. using matrix-message) so that there should be less risk of errors
 
 ## More Information
 
