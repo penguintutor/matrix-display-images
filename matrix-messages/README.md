@@ -12,14 +12,14 @@ Format of each entry
 
 
 [Title - human readable reference]
-start-date=<mm:dd>      (can add yyyy:mm:dd for year specific) - start-date and end-date must use same format (mm:dd or yyyy:mm:dd)
+start_date=<mm:dd>      (can add yyyy:mm:dd for year specific) - start-date and end-date must use same format (mm:dd or yyyy:mm:dd)
 end-date=<mm:dd>
-start-time=<hh:mm:ss>   (if start-time need end-time - if not then on all day) - handle time in same day or from night to morning
-end-time=<hh:mm:ss>     (if endtime < starttime and time > startime and time < endtime then on - if endtime > start time and time >starttime and starttime < endtime then on)
+start_time=<hh:mm:ss>   (if start-time need end-time - if not then on all day) - handle time in same day or from night to morning
+end_time=<hh:mm:ss>     (if endtime < starttime and time > startime and time < endtime then on - if endtime > start time and time >starttime and starttime < endtime then on)
 directory=<path>
 prefix=<normal-prefix>
-pir-enable=true
-pir-prefix=<prefix>
+pir_enable=true
+pir_prefix=<prefix>
 count=<number>
 
 
