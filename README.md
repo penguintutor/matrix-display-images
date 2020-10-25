@@ -4,6 +4,13 @@ Display images and animations on a Raspberry Pi RGB Matrix Display.
 This is designed for non-interlaced png images. It can be used to display a single image, or a series of images.
 It can also be run in server mode, allowing the configuration file to be updated during run time which will trigger a new series of images.
 
+Also see the subdirectory matrix-messages which includes Python code for updating the configuration file to automatically update the images based on date or time.
+
+
+## Under development
+This code is currently in an early stage and is under active development. It may not work correctly (or at all).
+Please check the git log and this README file for details of progress. You may also want to look for official announcements [PenguinTutor on YouTube](https://www.youtube.com/c/PenguinTutor) or [@PenguinTutor on Twitter](https://twitter.com/penguintutor)
+
 
 ## Install
 
