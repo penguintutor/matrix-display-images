@@ -1,0 +1,11 @@
+[Unit]
+Description=Matrix Message display messages on RGB Matrix
+After=sshd.service
+
+[Service]
+Type=simple
+ExecStart=/home/pi/matrix-display-images/matrix-messages/matrix-messages.py
+User=pi
+
+[Install]
+WantedBy=multi-user.target
