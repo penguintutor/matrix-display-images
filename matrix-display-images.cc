@@ -47,6 +47,7 @@ static void InterruptHandler(int signo) {
 
 struct SVRConfig {
 	char  directory[200];
+	char  display[40];
 	char  prefix[40];
 	int	  ms_delay;
 	int   img_number;
@@ -68,6 +69,7 @@ int loadConfig (struct SVRConfig *svr_config, const char *file_name) {
         // strip new line
         //if ((pos=strchr(Name, '\n')) != NULL) pos = '\0';
         // Use sscanf to check for each possible entry
+        sscanf (line, "display=%s\n", svr_config->display);
         sscanf (line, "directory=%s\n", svr_config->directory);
         sscanf (line, "prefix=%s\n", svr_config->prefix);
         sscanf (line, "position=%d\n", &svr_config->img_number);
@@ -77,6 +79,21 @@ int loadConfig (struct SVRConfig *svr_config, const char *file_name) {
 
 	fclose(fp);
 	return CFG_OK;
+}
+
+
+/* blanks out the display */
+void displayNone(Canvas *canvas) {
+
+    int num_rows = canvas->height();
+    int num_cols = canvas->width();
+    
+    for (int i = 0; i < num_rows; i++) {
+        for (int j = 0; j < num_cols; j ++ ) {
+						canvas->SetPixel(j, i, 0,0,0);
+        }
+    }
+    
 }
 
 /* Loads a png image and displays on canvas */
@@ -333,6 +350,7 @@ int main(int argc, char *argv[]) {
 		SVRConfig svr_config;
 		char config_file [255];
 		// Set defaults on config
+		strcpy (svr_config.display, "true");
 		strcpy (svr_config.directory, "");
 		strcpy (svr_config.prefix, "");
 		svr_config.img_number = 1;
@@ -343,6 +361,8 @@ int main(int argc, char *argv[]) {
 		// time and attrib of file (used to check for updates)
 		struct stat attrib;
 		time_t last_modified;
+		// store display as a bool so don't need to keep calling strcmp 
+		bool display = true;
 
 		// If config provided on command line use that, otherwise use current path and "display-image.cfg"
 		if (configfile != NULL) {
@@ -359,6 +379,13 @@ int main(int argc, char *argv[]) {
 		// Now have name of config file - either from -c or from path of executable file
 		if (debug > 0) printf ("Loading config %s \n", config_file);
 		success = loadConfig (&svr_config, config_file);
+		
+		if (strcmp (svr_config.display, "false") == 0) {
+		    display = false;
+		}
+		else {
+		    display = true;
+		}
 
 		stat(config_file, &attrib);
 		last_modified = attrib.st_mtime;
@@ -387,10 +414,17 @@ int main(int argc, char *argv[]) {
 				
 				// reset delay_offset
 				delay_offset = 0;
+				
+				if (strcmp (svr_config.display, "false") == 0) {
+                    display = false;
+                }
+                else {
+                    display = true;
+                }
 			}
 
 			// if last image has expired then delay_offset will be 0 - so show next
-			if (delay_offset == 0) {
+			if (display == true && delay_offset == 0) {
 			
                 // If no file then go back to 1 and try again
                 if (!checkFileExist (full_path, svr_config.directory, svr_config.prefix, svr_config.img_number)) {
@@ -411,6 +445,11 @@ int main(int argc, char *argv[]) {
                 // Increment the count
                 svr_config.img_number ++;
                 
+		    }
+		    
+		    // if disabled then clear screen
+		    if (display == false) {
+		        displayNone(canvas);
 		    }
 			
 			// Wait for delay ms before showing next image

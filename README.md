@@ -45,6 +45,7 @@ The file is display-images.cfg. It has the following options which should be eac
 
 Parameter            | Value
 :---------------     | :-----------------
+display              | true or false (whether to display image - default true)
 directory            | Directory containing image files
 prefix               | Prefix for image files, followed by ????.png where ???? is a zero padded number starting with 1.
 position             | Number of image to display (if not included continue at current image or start at 1).
@@ -111,6 +112,9 @@ The image files can be fixed by using GIMP if neccessary.
 In some circumstances the Ctrl-C does not cancel the program. In that case Ctrl-Z can be used and then the program can be stopped using `kill`.
 
 There is limited error handling for the configuration file. It is designed for the configuration file to be created through code (eg. using matrix-message) so that there should be less risk of errors
+
+
+*** Bug any parameters not specified will retain their previous value - needs to reset to defaults ***
 
 ## More Information
 
