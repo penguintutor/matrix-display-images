@@ -86,7 +86,7 @@ class Message:
         else:
             self.prefix = ""
 
-        if ('pir_enable' in data.keys() and 'pir_prefix' in data.keys() and data['pir_enable'] == True):
+        if ('pir_enable' in data.keys() and 'pir_prefix' in data.keys() and data['pir_enable'] == "true"):
             self.pir_enable = True
             self.pir_prefix = data['pir_prefix']
         else:
@@ -126,10 +126,10 @@ class Message:
             return 0
         # if ends today (end time is later than current time)
         if (self.end_time > today.time()) :
-            return today.time - end_time
+            return (datetime.combine(today.date(), self.end_time) - today).total_seconds()
         # If not then ends tomorrow
         # seconds until end of today
-        seconds_future_today = (datetime.combine(today.date(), time(23,59,59)) - today).seconds 
+        seconds_future_today = (datetime.combine(today.date(), time(23,59,59)) - today).total_seconds() 
         # plust seconds to time tommorow
         seconds_future = seconds_future_today + (datetime.combine(today.date(), time(0,0,0)) - datetime.combine(today.date(), self.end_time)).seconds
         minutes_future = seconds_future // 60
