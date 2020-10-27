@@ -103,8 +103,10 @@ Flag                                | Description
 
 The program uses significant processing time. If run on a Raspberry Pi Zero or similar then it is recommended that it is run as a headless computer without X running.
 
-The display is designed for non-interlaced images with no transparency. If images have interlacing then it will issue a warning
+The display is designed for 8bpc RGB, non-interlaced images with no transparency. If images have interlacing then it will issue a warning
 "libpng warning: Interlace handling should be turned on when using png_read_image". These files should be converted to non-interlaced png images.
+
+The image files can be fixed by using GIMP if neccessary.
 
 In some circumstances the Ctrl-C does not cancel the program. In that case Ctrl-Z can be used and then the program can be stopped using `kill`.
 
