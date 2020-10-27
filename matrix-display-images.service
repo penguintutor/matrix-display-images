@@ -1,0 +1,10 @@
+[Unit]
+Description=Display images on RGB Matrix
+After=sshd.service
+
+[Service]
+ExecStart=/home/pi/matrix-display-images/matrix-display-images
+User=root
+
+[Install]
+WantedBy=multi-user.target

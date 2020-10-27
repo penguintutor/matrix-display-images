@@ -34,7 +34,7 @@ You can now copy the matrix-display-images executable to a convenient place if r
 test using
 `sudo ./matrix-display-images -f filename.png`
 
-which will display a single image. Press enter to exit
+which will display a single image. Press enter to exit.
 
 
 ## Running in Server mode
@@ -52,6 +52,20 @@ delay								 | Delay between images in milliseconds
 
 
 When running in server mode then the following command line options are ignored (-f, -d, -D, -m, -p) and instead should be included in the configuration file.
+
+
+To start this automatically as a daemon follow the following instructions 
+
+
+sudo cp /home/pi/matrix-display-images/matrix-display-images.service /etc/systemd/system
+sudo chown root:root /etc/systemd/system/matrix-display-images.service
+sudo chmod 755 /etc/systemd/system/matrix-display-images.service
+sudo systemctl enable matrix-display-images.service
+sudo systemctl start matrix-display-images.service
+
+
+A common way to run in server mode is using matrix-messages. See the README.md file in that directory for information on setting that up.
+
 
 
 ## Command line options
