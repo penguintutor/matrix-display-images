@@ -111,6 +111,10 @@ def writeConfig (pir_status):
         fp.write ("prefix="+active_message.pir_prefix+"\n")
     else:
         fp.write ("prefix="+active_message.prefix+"\n")
+    if (active_message.delay != ""):
+        fp.write ("delay="+active_message.delay+"\n")
+    if (active_message.display == "false") :
+        fp.write ("display=false\n")
     ## Need to add delay and position handling
     fp.close()
 

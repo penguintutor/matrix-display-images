@@ -449,6 +449,9 @@ int main(int argc, char *argv[]) {
 		    
 		    // if disabled then clear screen
 		    if (display == false) {
+		        if (debug > 1) {
+		            printf ("Display disabled\n");
+		        }
 		        displayNone(canvas);
 		    }
 			

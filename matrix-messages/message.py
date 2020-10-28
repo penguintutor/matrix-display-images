@@ -7,6 +7,8 @@ class Message:
         self.title = data['title']
         self.start_date = None
         self.end_date = None
+        self.delay = ""
+        self.display = True
 
         if (not 'start_date' in data.keys()):
             # If no start date then start at begining of year (1st jan current year)
@@ -97,6 +99,11 @@ class Message:
             self.count = data['count']
         else:
             self.count = ""
+            
+        if ('delay' in data.keys()) :
+            self.delay = data['delay']
+        else :
+            self.delay = ""
 
 
     # Return number of minutes to start (if already started then 0, if more than 24 hours then 1440)

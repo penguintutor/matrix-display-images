@@ -20,7 +20,9 @@ directory=<path>
 prefix=<normal-prefix>
 pir_enable=true
 pir_prefix=<prefix>
+delay=<number>          # How long to delay between images in ms
 count=<number>
+display=<true|false>    # whether to display image (default true, false allows to create an override)
 
 
 Order of entries is important - first match that applies is used - sleeps until end-date or reasonable time passed
