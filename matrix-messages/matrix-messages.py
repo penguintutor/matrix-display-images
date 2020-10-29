@@ -115,7 +115,12 @@ def writeConfig (pir_status):
         fp.write ("delay="+active_message.delay+"\n")
     if (active_message.display == "false") :
         fp.write ("display=false\n")
-    ## Need to add delay and position handling
+    ## Need to add position handling
+    fp.close()
+    
+def writeDisableConfig ():
+    fp = open(display_image_config_file, "w")
+    fp.write ("display=false\n")
     fp.close()
 
 def main():
@@ -131,7 +136,7 @@ def main():
         
         if (active_message == None):
             #print ("No active message")
-            pass
+            writeDisableConfig()
         else:
             print (active_message.title)
         
