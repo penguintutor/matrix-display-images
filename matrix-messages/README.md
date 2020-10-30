@@ -43,6 +43,18 @@ sudo systemctl start matrix-messages.service
 
 Add more checking to message.py for parsing config file
 
+## Tests 
+Tests are for the messages class file only, not the full program.
+
+
+To run test first install the unittest libraries (if not already installed).
+sudo apt install python3-testtools
+
+
+Then run the ./run_tests.py file.
+
+Due to the datetime nature of this there may be errors at certain times of the day. This is a limitation of the tests and my not indicate a problem with the messages code.
+
 
 ## More Information
 

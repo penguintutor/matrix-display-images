@@ -110,16 +110,16 @@ class Message:
     def minutes_to_start (self):
         today = datetime.now()
         # If current active
-        if date_time_valid():
+        if self.date_time_valid():
             return 0
         # If today but in future
-        if (date_valid () and start_time > today.time):
-            time_in_sec =  (datetime(today.date,start_time) - today).total_seconds()
+        if (self.date_valid () and self.start_time > today.time()):
+            time_in_sec =  (datetime.combine(today.date(),self.start_time) - today).total_seconds()
             return time_in_sec // 60    # return as minutes (ignore any remainder)
         # If tomorrow 
         if ((datetime (today) + timedelta(days=1)).date >= self.start_date):
             self.start_date == (today + timedelta(days=1)).date
-            seconds_future = (datetime(today.date, start_time) + timedelta(day=1) - today).total_seconds()
+            seconds_future = (datetime.combine(today.date(), self.start_time) + timedelta(day=1) - today).total_seconds()
             minutes_future = seconds_future // 60
             if (minutes_future < 1440):
                 return minutes_future

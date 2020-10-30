@@ -24,12 +24,16 @@ future_message_change = 1440
 
 pir = MotionSensor(26)
 
+debug = 0
 
 def readConfig (config_file):
     global active_message
     # Reset active_message and future_message_change
     active_message = None
     future_message_change = 1440
+    
+    if (debug > 0):
+        print ("Reading config file")
     
     fp = open(config_file, "r")
     current_entry = {}
@@ -38,6 +42,8 @@ def readConfig (config_file):
         lastline = False
         # Read a line at a time
         line = fp.readline()
+        if (not line):
+            break
         if (line == '') :
             lastline = True
         # strip off any new line etc (must do after checking for lastline)
@@ -68,10 +74,11 @@ def readConfig (config_file):
             # Test to see if this new entry is to be new entry or potential next
             # If so save it as the new entry
             #Debug show all objects as created
-            print (this_message.to_string())
+            if (debug > 0):
+                print (this_message.to_string())
             
             # Should this be current active one (if so then don't read anymore entries)
-            if (this_message.date_time_valid):
+            if (this_message.date_time_valid()):
                 #print ("Found active entry")
                 # Make this active
                 active_message = copy.copy(this_message)
@@ -98,13 +105,15 @@ def readConfig (config_file):
             (key, value) = line.split('=')
             current_entry[key] = value
             
-            
     # End of while loop
     # close file
     fp.close()
+
     
 
 def writeConfig (pir_status):
+    if (debug > 0):
+        print ("Writing config")
     fp = open(display_image_config_file, "w")
     fp.write ("directory="+active_message.directory+"\n")
     if (active_message.pir_enable and pir_status):
@@ -119,6 +128,8 @@ def writeConfig (pir_status):
     fp.close()
     
 def writeDisableConfig ():
+    if (debug > 0):
+        print ("Writing null config")
     fp = open(display_image_config_file, "w")
     fp.write ("display=false\n")
     fp.close()
@@ -131,20 +142,28 @@ def main():
         # reread if it's changed or when time has expired
         if (time_read + timedelta(minutes=future_message_change) < datetime.now()):
             #print ("Reading config file")
+            # reset active_message - readConfig will replace if there is an active message
+            active_message == None
             readConfig (config_file)
             time_read = datetime.now()
         
         if (active_message == None):
-            #print ("No active message")
+            if (debug > 0):
+                print ("No active message")
             writeDisableConfig()
+            # Todo set sleep time to next config check time
+            sleep (1)
         else:
-            print (active_message.title)
+            if (debug > 0) :
+                print ("Active message is "+active_message.title)
         
             if active_message.pir_enable:
-                #print ("Checking pir")
+                if (debug > 1):
+                    print ("Checking pir")
                 if pir.motion_detected == True:
                     writeConfig (True)
-                    #print ("Motion detected")
+                    if (debug > 1):
+                        print ("Motion detected")
                 else:
                     writeConfig (False)
                     sleep (time_between_pir)
