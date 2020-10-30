@@ -151,8 +151,8 @@ def main():
             if (debug > 0):
                 print ("No active message")
             writeDisableConfig()
-            # Todo set sleep time to next config check time
-            sleep (1)
+            # set sleep time to next config check time
+            sleep (future_message_change * 60)
         else:
             if (debug > 0) :
                 print ("Active message is "+active_message.title)

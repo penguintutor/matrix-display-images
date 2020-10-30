@@ -24,6 +24,9 @@ class TestMessageClass(unittest.TestCase):
         self.assertTrue(test_message.date_valid())
         self.assertTrue(test_message.time_valid())
         self.assertTrue(test_message.date_time_valid())
+        # Test minutes to start (0 as running) - unable to test minutes to end as unknown
+        self.assertEqual(test_message.minutes_to_start(), 0)
+
 
     # Use start date and time 2 mins ago end time 2 mins after - must be run after 00:02:00 and before 23:58:00
     # Uses 2 digit dates
@@ -44,6 +47,8 @@ class TestMessageClass(unittest.TestCase):
         self.assertTrue(test_message.date_valid())
         self.assertTrue(test_message.time_valid())
         self.assertTrue(test_message.date_time_valid())
+        self.assertEqual(test_message.minutes_to_start(), 0)
+        self.assertAlmostEqual(test_message.minutes_to_end(), 2, delta=1)
    
 
     # Use start date and in future but current time so date time should not be met
@@ -77,6 +82,26 @@ class TestMessageClass(unittest.TestCase):
             'start_time':(today+timedelta(hours=+1)).strftime("%H:%M"),
             'end_date':(today+timedelta(days=+2)).strftime("%Y:%m:%d"),
             'end_time':(today+timedelta(hours=-1)).strftime("%H:%M")
+            }
+        test_message = Message(data)
+        #print (test_message.to_string())
+        self.assertEqual(test_message.title, data['title'])
+        self.assertEqual(test_message.directory, data['directory'])
+        self.assertTrue(test_message.date_valid())
+        self.assertFalse(test_message.time_valid())
+        self.assertFalse(test_message.date_time_valid())
+        
+     # Test valid time on a valid date where time is not yet reached (not overnight)
+    # Uses 4 digit dates
+    def test_not_time2(self):
+        today = datetime.now()
+        data = {
+            'title':"Test 5",
+            'directory':"directory1",
+            'start_date':(today+timedelta(days=-30)).strftime("%Y:%m:%d"),
+            'start_time':(today+timedelta(hours=+1)).strftime("%H:%M"),
+            'end_date':(today+timedelta(days=+30)).strftime("%Y:%m:%d"),
+            'end_time':(today+timedelta(hours=+2)).strftime("%H:%M")
             }
         test_message = Message(data)
         #print (test_message.to_string())
