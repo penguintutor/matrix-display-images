@@ -3,6 +3,8 @@ from message import Message
 from datetime import date, time, datetime, timedelta
 
 
+### Need to add tests for minutes_to_start etc.
+
 # Test date functions in Message class 
 # To keep the tests simple some of these may not work if run close to midnight (within 1 hour either side). That is not a failure of the message class, but a limitation of this test
 
@@ -64,6 +66,25 @@ class TestMessageClass(unittest.TestCase):
         self.assertTrue(test_message.time_valid())
         self.assertFalse(test_message.date_time_valid())
 
+    # Test valid time on a valid date where time is not yet reached (overnight only)
+    # Uses 4 digit dates
+    def test_not_time1(self):
+        today = datetime.now()
+        data = {
+            'title':"Test 4",
+            'directory':"directory1",
+            'start_date':(today+timedelta(days=-1)).strftime("%Y:%m:%d"),
+            'start_time':(today+timedelta(hours=+1)).strftime("%H:%M"),
+            'end_date':(today+timedelta(days=+2)).strftime("%Y:%m:%d"),
+            'end_time':(today+timedelta(hours=-1)).strftime("%H:%M")
+            }
+        test_message = Message(data)
+        #print (test_message.to_string())
+        self.assertEqual(test_message.title, data['title'])
+        self.assertEqual(test_message.directory, data['directory'])
+        self.assertTrue(test_message.date_valid())
+        self.assertFalse(test_message.time_valid())
+        self.assertFalse(test_message.date_time_valid())
 
 
 if __name__ == '__main__':

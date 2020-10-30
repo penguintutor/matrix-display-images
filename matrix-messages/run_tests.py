@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import unittest
 from tests.test_message import *
 
