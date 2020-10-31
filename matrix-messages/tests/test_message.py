@@ -119,6 +119,28 @@ class TestMessageClass(unittest.TestCase):
         self.assertAlmostEqual(test_message.minutes_to_start(), 60, delta=5)
         self.assertEqual(test_message.minutes_to_end(), 0)
 
+    # Use start date today and end day future but time passed (turn off overnight)
+    def test_future_date_2(self):
+        today = datetime.now()
+        data = {
+            'title':"Test 3",
+            'directory':"directory1",
+            'start_date':(today+timedelta(days=0)).strftime("%Y:%m:%d"),
+            'start_time':(today+timedelta(hours=-2)).strftime("%H:%M"),
+            'end_date':(today+timedelta(days=+2)).strftime("%Y:%m:%d"),
+            'end_time':(today+timedelta(hours=-1)).strftime("%H:%M")
+            }
+        test_message = Message(data)
+        #print (test_message.to_string())
+        self.assertEqual(test_message.title, data['title'])
+        self.assertEqual(test_message.directory, data['directory'])
+        self.assertTrue(test_message.date_valid())
+        self.assertFalse(test_message.time_valid())
+        self.assertFalse(test_message.date_time_valid())
+        self.assertGreater(test_message.minutes_to_start(), 120)
+        self.assertLessEqual(test_message.minutes_to_start(), 1440)
+        self.assertGreater(test_message.minutes_to_start(), test_message.minutes_to_end())
+
 
 if __name__ == '__main__':
     unittest.main()
