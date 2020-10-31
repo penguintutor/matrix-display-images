@@ -62,7 +62,6 @@ int loadConfig (struct SVRConfig *svr_config, const char *file_name) {
 	if ((fp = fopen(file_name, "r")) == NULL)
 		return (CFG_MISSING);
 
-
     while( fgets(line,1024,fp) ) {
         // if comment / empty line (min 3 chars a=b)
         if (line[0] == '#' || strlen(line) < 3) continue;
@@ -224,7 +223,7 @@ static int usage(const char *progname) {
 }
 
 
-// works out filename from parts and updates path, then return -1 if not exist
+// work out filename from parts and updates path, then return -1 if not exist
 // 1 if file exists
 bool checkFileExist (char *full_path, char *directory, char *prefix, int count) {
 	// if already got / on end of directory don't add another one, otherwise add one
@@ -273,7 +272,7 @@ int main(int argc, char *argv[]) {
   }
 
 
-  // It is always good to set up a signal handler to cleanly exit when we
+  // Set up a signal handler to cleanly exit when we
   // receive a CTRL-C for instance. The DrawOnCanvas() routine is looking
   // for that.
   signal(SIGTERM, InterruptHandler);
@@ -344,8 +343,6 @@ int main(int argc, char *argv[]) {
   // Default is server mode
 	if (mode == DEFAULT_MODE) mode = SERVER_MODE;
 
-
-
 	if (mode == SERVER_MODE) {
 		SVRConfig svr_config;
 		char config_file [255];
@@ -360,7 +357,8 @@ int main(int argc, char *argv[]) {
 		int success;
 		// time and attrib of file (used to check for updates)
 		struct stat attrib;
-		time_t last_modified;
+		// set last modified to epoch
+		time_t last_modified = 0;
 		// store display as a bool so don't need to keep calling strcmp 
 		bool display = true;
 
@@ -387,41 +385,50 @@ int main(int argc, char *argv[]) {
 		    display = true;
 		}
 
-		stat(config_file, &attrib);
-		last_modified = attrib.st_mtime;
-
+		// If error with loading config then set display to false so 
+		// we can keep trying
 		if (success == CFG_MISSING) {
 			printf ("Unable to find config file %s\n", config_file);
-			exit (1);
+			display = false;
 		}
 		else if (success == CFG_ERROR) {
 			printf ("Corrupt config file %s\n", config_file);
-			exit (1);
+			display = false;
 		}
+		else {
+		    // Store when config file was last updated so know if need to reload later
+		    stat(config_file, &attrib);
+		    last_modified = attrib.st_mtime;
+		}
+		
 
 
 		// Start server mode
 		while (1) {
 			// Check if config file changed and if so reload
-			stat(config_file, &attrib);
-			if (attrib.st_mtime > last_modified) {
-				// Does not check if file loaded correctly
-				if (debug > 0) printf ("Updating config %s \n", config_file);
-				// If unable to load update then ignore
-				success = loadConfig (&svr_config, config_file);
-				if (debug > 0 && success != CFG_OK) printf ("Warning error reading config %s %d \n", config_file, success);
-				last_modified = attrib.st_mtime;
-				
-				// reset delay_offset
-				delay_offset = 0;
-				
-				if (strcmp (svr_config.display, "false") == 0) {
-                    display = false;
-                }
-                else {
-                    display = true;
-                }
+			if (stat(config_file, &attrib) != 0) {
+			    if (debug >0) printf ("Error checking status of config file %s\n", config_file);
 			}
+			else {
+			    // Only check to reload if the file actually exists
+                if (attrib.st_mtime > last_modified) {
+                    if (debug > 0) printf ("Updating config %s \n", config_file);
+                    // If unable to load update then ignore
+                    success = loadConfig (&svr_config, config_file);
+                    if (debug > 0 && success != CFG_OK) printf ("Warning error reading config %s %d \n", config_file, success);
+                    last_modified = attrib.st_mtime;
+                    
+                    // reset delay_offset
+                    delay_offset = 0;
+                    
+                    if (strcmp (svr_config.display, "false") == 0) {
+                        display = false;
+                    }
+                    else {
+                        display = true;
+                    }
+                }
+            }
 
 			// if last image has expired then delay_offset will be 0 - so show next
 			if (display == true && delay_offset == 0) {
@@ -432,6 +439,7 @@ int main(int argc, char *argv[]) {
                     // generate filename - if initial file doesn't exist then wait 1 sec and return to start to try again
                     // alternative would be to display an error or perhaps test message
                     if (!checkFileExist (full_path, svr_config.directory, svr_config.prefix, svr_config.img_number)) {
+                        if (debug > 0) printf ("Initial file doesn't exist dir %s, prefix %s, number %d",svr_config.directory, svr_config.prefix, svr_config.img_number); 
                         usleep (1000);
                         continue;
                     }
@@ -470,11 +478,8 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-
-
 	// Single file
 	else if (mode == SINGLE_IMG) {
-
 		printf ("Displaying single image %s\n", filename);
 
 	  success = displayPng(canvas, filename);
