@@ -117,9 +117,9 @@ class Message:
             time_in_sec =  (datetime.combine(today.date(),self.start_time) - today).total_seconds()
             return time_in_sec // 60    # return as minutes (ignore any remainder)
         # If tomorrow 
-        if ((datetime (today) + timedelta(days=1)).date >= self.start_date):
+        if ((today + timedelta(days=1)).date() >= self.start_date):
             self.start_date == (today + timedelta(days=1)).date
-            seconds_future = (datetime.combine(today.date(), self.start_time) + timedelta(day=1) - today).total_seconds()
+            seconds_future = (datetime.combine(today.date(), self.start_time) + timedelta(days=1) - today).total_seconds()
             minutes_future = seconds_future // 60
             if (minutes_future < 1440):
                 return minutes_future

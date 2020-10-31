@@ -51,7 +51,7 @@ class TestMessageClass(unittest.TestCase):
         self.assertAlmostEqual(test_message.minutes_to_end(), 2, delta=1)
    
 
-    # Use start date and in future but current time so date time should not be met
+    # Use start date and end in future but current time so date time should not be met
     # Uses 2 digit dates
     def test_future_date_1(self):
         today = datetime.now()
@@ -70,6 +70,10 @@ class TestMessageClass(unittest.TestCase):
         self.assertFalse(test_message.date_valid())
         self.assertTrue(test_message.time_valid())
         self.assertFalse(test_message.date_time_valid())
+        self.assertGreater(test_message.minutes_to_start(), 1220)
+        self.assertLessEqual(test_message.minutes_to_start(), 1440)
+        self.assertEqual(test_message.minutes_to_end(), 0)
+        
 
     # Test valid time on a valid date where time is not yet reached (overnight only)
     # Uses 4 digit dates
@@ -90,6 +94,8 @@ class TestMessageClass(unittest.TestCase):
         self.assertTrue(test_message.date_valid())
         self.assertFalse(test_message.time_valid())
         self.assertFalse(test_message.date_time_valid())
+        self.assertAlmostEqual(test_message.minutes_to_start(), 60, delta=5)
+        self.assertEqual(test_message.minutes_to_end(), 0)
         
      # Test valid time on a valid date where time is not yet reached (not overnight)
     # Uses 4 digit dates
@@ -110,6 +116,8 @@ class TestMessageClass(unittest.TestCase):
         self.assertTrue(test_message.date_valid())
         self.assertFalse(test_message.time_valid())
         self.assertFalse(test_message.date_time_valid())
+        self.assertAlmostEqual(test_message.minutes_to_start(), 60, delta=5)
+        self.assertEqual(test_message.minutes_to_end(), 0)
 
 
 if __name__ == '__main__':
