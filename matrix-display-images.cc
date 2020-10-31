@@ -197,6 +197,10 @@ if (width < (unsigned int)num_cols) num_cols = width;
     }
 
    /* Clean up after the read, and free any memory allocated.  REQUIRED. */
+   
+   for (row = 0; row < height; row++) {
+       free(row_pointers[row]);
+   }
    png_destroy_read_struct(&png_ptr, &info_ptr, NULL);
 
    /* Close the file. */
@@ -439,7 +443,7 @@ int main(int argc, char *argv[]) {
                     // generate filename - if initial file doesn't exist then wait 1 sec and return to start to try again
                     // alternative would be to display an error or perhaps test message
                     if (!checkFileExist (full_path, svr_config.directory, svr_config.prefix, svr_config.img_number)) {
-                        if (debug > 0) printf ("Initial file doesn't exist dir %s, prefix %s, number %d",svr_config.directory, svr_config.prefix, svr_config.img_number); 
+                        if (debug > 0) printf ("Initial file doesn't exist dir %s, prefix %s, number %d\n",svr_config.directory, svr_config.prefix, svr_config.img_number); 
                         usleep (1000);
                         continue;
                     }
