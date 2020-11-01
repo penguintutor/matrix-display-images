@@ -56,7 +56,7 @@ class Message:
                 elif (start_month > end_month):
                     end_year = today.year+1
                 # start month and year is same
-                elif (end_day == start_day):
+                elif (end_day >= start_day):
                     end_year = today.year
                 else:
                     end_year = today.year+1
@@ -117,7 +117,7 @@ class Message:
             time_in_sec =  (datetime.combine(today.date(),self.start_time) - today).total_seconds()
             return time_in_sec // 60    # return as minutes (ignore any remainder)
         # If tomorrow 
-        if ((today + timedelta(days=1)).date() >= self.start_date):
+        if ((today + timedelta(days=1)).date() >= self.start_date and (today + timedelta(days=1)).date() <= self.end_date):
             self.start_date == (today + timedelta(days=1)).date()
             seconds_future = (datetime.combine(today.date(), self.start_time) + timedelta(days=1) - today).total_seconds()
             minutes_future = seconds_future // 60

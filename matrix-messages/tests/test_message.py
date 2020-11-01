@@ -123,7 +123,7 @@ class TestMessageClass(unittest.TestCase):
     def test_future_date_2(self):
         today = datetime.now()
         data = {
-            'title':"Test 3",
+            'title':"Test 6",
             'directory':"directory1",
             'start_date':(today+timedelta(days=0)).strftime("%Y:%m:%d"),
             'start_time':(today+timedelta(hours=-2)).strftime("%H:%M"),
@@ -140,6 +140,27 @@ class TestMessageClass(unittest.TestCase):
         self.assertGreater(test_message.minutes_to_start(), 120)
         self.assertLessEqual(test_message.minutes_to_start(), 1440)
         self.assertGreater(test_message.minutes_to_start(), test_message.minutes_to_end())
+
+    # Date already past
+    def test_past_date_1(self):
+        today = datetime.now()
+        data = {
+            'title':"Test 7",
+            'directory':"directory1",
+            'start_date':(today+timedelta(days=-31)).strftime("%m:%d"),
+            'start_time':(today+timedelta(hours=-2)).strftime("%H:%M"),
+            'end_date':(today+timedelta(days=-1)).strftime("%m:%d"),
+            'end_time':(today+timedelta(hours=-4)).strftime("%H:%M")
+            }
+        test_message = Message(data)
+        #print (test_message.to_string())
+        self.assertEqual(test_message.title, data['title'])
+        self.assertEqual(test_message.directory, data['directory'])
+        self.assertFalse(test_message.date_valid())
+        self.assertTrue(test_message.time_valid())
+        self.assertFalse(test_message.date_time_valid())
+        self.assertEqual(test_message.minutes_to_start(), 1440)
+        self.assertEqual(test_message.minutes_to_end(), 0)
 
 
 if __name__ == '__main__':
