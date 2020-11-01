@@ -163,5 +163,36 @@ class TestMessageClass(unittest.TestCase):
         self.assertEqual(test_message.minutes_to_end(), 0)
 
 
+    # Use start date and time 2 mins ago end time 2 mins after - must be run after 00:02:00 and before 23:58:00
+    # Uses 2 digit dates
+    def test_with_pir(self):
+        today = datetime.now()
+        data = {
+            'title':"Test 8",
+            'directory':"directory1",
+            'start_date':today.strftime("%m:%d"),
+            'start_time':(today+timedelta(minutes=-2)).strftime("%H:%M"),
+            'end_date':today.strftime("%m:%d"),
+            'end_time':(today+timedelta(minutes=+2)).strftime("%H:%M"),
+            'prefix':"normal",
+            'pir_enable':"true",
+            'pir_prefix':"pir",
+            'pir_ontime':"10"
+            }
+        test_message = Message(data)
+        #print (test_message.to_string())
+        self.assertEqual(test_message.title, data['title'])
+        self.assertEqual(test_message.directory, data['directory'])
+        self.assertTrue(test_message.date_valid())
+        self.assertTrue(test_message.time_valid())
+        self.assertTrue(test_message.date_time_valid())
+        self.assertEqual(test_message.minutes_to_start(), 0)
+        self.assertAlmostEqual(test_message.minutes_to_end(), 2, delta=1)
+        self.assertEqual(test_message.pir_ontime, 10)       # Check it's an int value
+        self.assertEqual(test_message.prefix, data['prefix'])
+        self.assertEqual(test_message.pir_prefix, data['pir_prefix'])
+   
+
+
 if __name__ == '__main__':
     unittest.main()

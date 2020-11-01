@@ -173,6 +173,8 @@ def main():
                     writeConfig (True)
                     if (debug > 1):
                         print ("Motion detected")
+                    if (active_message.pir_ontime != 0):
+                        sleep(active_message.pir_ontime/1000)
                 else:
                     writeConfig (False)
                     sleep (time_between_pir)

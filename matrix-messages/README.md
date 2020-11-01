@@ -20,6 +20,7 @@ directory=<path>
 prefix=<normal-prefix>
 pir_enable=true
 pir_prefix=<prefix>
+pir_ontime=<number>     # How long to keep pir on in ms
 delay=<number>          # How long to delay between images in ms
 count=<number>
 display=<true|false>    # whether to display image (default true, false allows to create an override)

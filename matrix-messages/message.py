@@ -93,6 +93,14 @@ class Message:
             self.pir_prefix = data['pir_prefix']
         else:
             self.pir_enable = False
+            
+        # set pir_ontime regardless of whether included (set to 0 to use default)
+        # only write out if pir_enable is also set
+        if ('pir_ontime' in data.keys()):
+            #todo add error checking for not int
+            self.pir_ontime = int(data['pir_ontime'])
+        else:
+            self.pir_ontime = 0
 
         # Count is kept as a string for config file - not processed
         if ('count' in data.keys()) :
