@@ -24,6 +24,8 @@ future_message_change = 1440
 
 pir = MotionSensor(26)
 
+# Debug setting - increase value to print status messages whilst running
+# debug=0 will only display errors
 debug = 0
 
 def readConfig (config_file):
@@ -42,24 +44,27 @@ def readConfig (config_file):
         lastline = False
         # Read a line at a time
         line = fp.readline()
+        # lastline indicates lastline of file read in, but if we've already reached end
+        # indicated by not line - then treat the same as though it's the last line
         if (not line):
-            break
+            lastline = True
+            line = ''
         if (line == '') :
             lastline = True
         # strip off any new line etc (must do after checking for lastline)
         line = line.strip()
         # Ignore comments / empty lines
-        if (line.startswith ('#') or line == "") :
+        if ((line.startswith ('#') or line == "") and lastline == False) :
             continue
         if (line.startswith('[') or lastline == True):
             # If less than 2 entries in current entry then only title so ignore
             if (len(current_entry) < 2):
                 # if there is title, but nothing else then issue warning
                 if ('title' in current_entry.keys()):
-                    print ("Warning ast entry incomplete - %s", current_entry['title'])
+                    print ("Warning last entry incomplete - %s", current_entry['title'])
                 if (lastline == True):
                     #Debug show all objects as created
-                    print ("Last line read")
+                    print ("Warning last entry incomplete %s and last line read", current_entry['title'])
                     break
                 # get rid of current entry - and start new with title
                 current_entry = {}
@@ -91,9 +96,13 @@ def readConfig (config_file):
             elif (this_message.minutes_to_start() < future_message_change):
                 future_message_change = this_message.minutes_to_start()
                 
-                
             # Now stored previous entry and if not already got active
             # save new entry in temporary dictionary
+            
+            # Exit if lastline read - no more entries
+            if (lastline == True):
+                break
+            
             current_entry = {}
             line = line.replace ('[', "")
             line = line.replace (']', "")
