@@ -38,7 +38,6 @@ To run as a system daemon enter the following commands
 ```bash
 sudo cp /home/pi/matrix-display-images/matrix-messages/matrix-messages.service /etc/systemd/system
 sudo chown root:root /etc/systemd/system/matrix-messages.service
-sudo chmod 755 /etc/systemd/system/matrix-messages.service
 sudo systemctl enable matrix-messages.service
 sudo systemctl start matrix-messages.service
 ```

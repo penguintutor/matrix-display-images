@@ -60,7 +60,6 @@ To start this automatically as a daemon follow the following instructions
 ```bash
 sudo cp /home/pi/matrix-display-images/matrix-display-images.service /etc/systemd/system
 sudo chown root:root /etc/systemd/system/matrix-display-images.service
-sudo chmod 755 /etc/systemd/system/matrix-display-images.service
 sudo systemctl enable matrix-display-images.service
 sudo systemctl start matrix-display-images.service
 ```
