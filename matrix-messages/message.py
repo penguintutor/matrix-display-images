@@ -78,8 +78,6 @@ class Message:
             self.start_time = time()
             self.end_time = time()
         
-
-
         # Directory is required
         self.directory = data['directory']
 

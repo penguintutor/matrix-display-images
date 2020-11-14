@@ -7,11 +7,13 @@ from gpiozero import MotionSensor
 from time import sleep
 from message import Message
 from datetime import datetime, timedelta
+import pathlib
 import copy
 
 
 config_file = "/home/pi/matrix-display-images/matrix-messages/messages.cfg"
 display_image_config_file = "/home/pi/matrix-display-images/display-image.cfg"
+log_file = "/home/pi/matrix-display-messages/matrix-messages/log.txt"
 
 # how long to wait between checking for pir setting in sec
 time_between_pir = 1
@@ -27,6 +29,8 @@ pir = MotionSensor(26)
 # Debug setting - increase value to print status messages whilst running
 # debug=0 will only display errors
 debug = 0
+# What level to log to file (less noisy than debug)
+log_level = 1
 
 def readConfig (config_file):
     global active_message
@@ -120,9 +124,36 @@ def readConfig (config_file):
 
     
 
+def logMessage (message):
+    fp = open(log_file, "a")
+    fp.write (datetime.now().isoformat()+": "+message+"\n")
+    fp.close()
+    
+    
+def startLog ():
+    # Allows it to change the log_level if unable to log
+    global log_level
+    if (log_level == 0):
+        return
+    if (log_file == ""):
+        log_level = 0
+        return
+    path = pathlib.Path(log_file)
+    # File does not exist so create 
+    if (not path.is_file()):
+            fp = open(log_file, "w")
+            fp.write (datetime.now().isoformat()+": "+Creating new log file+"\n")
+            fp.close()
+    # Write to log 
+    logMessage ("Application started")
+        
+        
+
 def writeConfig (pir_status):
     if (debug > 0):
         print ("Writing config")
+    if (log_level > 0):
+        logMessage("Writing config "+active_message.title)
     fp = open(display_image_config_file, "w")
     fp.write ("directory="+active_message.directory+"\n")
     if (active_message.pir_enable and pir_status):
@@ -139,6 +170,8 @@ def writeConfig (pir_status):
 def writeDisableConfig ():
     if (debug > 0):
         print ("Writing null config")
+    if (log_level > 0):
+        logMessage("Writing null config")
     fp = open(display_image_config_file, "w")
     fp.write ("display=false\n")
     fp.close()
