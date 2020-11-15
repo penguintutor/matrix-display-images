@@ -192,7 +192,30 @@ class TestMessageClass(unittest.TestCase):
         self.assertEqual(test_message.prefix, data['prefix'])
         self.assertEqual(test_message.pir_prefix, data['pir_prefix'])
    
-
+    # Active message - due to finish just before midnight - check minutes to end time < end day
+    def test_active_message_change(self):
+        today = datetime.now()
+        data = {
+            'title':"Test 9",
+            'directory':"directory1",
+            'start_date':today.strftime("%m:%d"),
+            'start_time':(today+timedelta(minutes=-2)).strftime("%H:%M"),
+            'end_date':today.strftime("%m:%d"),
+            'end_time':"23:58:00"
+            }
+        test_message = Message(data)
+        # difference between now and end_time
+        today_end_time = datetime.now()
+        today_end_time = today_end_time.replace(hour=23, minute=58, second=0)
+        seconds_to_end = (today_end_time - today).total_seconds()
+        #print (test_message.to_string())
+        self.assertEqual(test_message.title, data['title'])
+        self.assertEqual(test_message.directory, data['directory'])
+        self.assertTrue(test_message.date_valid())
+        self.assertTrue(test_message.time_valid())
+        self.assertTrue(test_message.date_time_valid())
+        self.assertEqual(test_message.minutes_to_start(), 0)
+        self.assertLessEqual(test_message.minutes_to_end(), (seconds_to_end / 60)+1)
 
 if __name__ == '__main__':
     unittest.main()

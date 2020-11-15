@@ -7,13 +7,12 @@ from gpiozero import MotionSensor
 from time import sleep
 from message import Message
 from datetime import datetime, timedelta
-import pathlib
 import copy
 
 
 config_file = "/home/pi/matrix-display-images/matrix-messages/messages.cfg"
 display_image_config_file = "/home/pi/matrix-display-images/display-image.cfg"
-log_file = "/home/pi/matrix-display-messages/matrix-messages/log.txt"
+log_file = "/home/pi/matrix-display-images/matrix-messages/log.txt"
 
 # how long to wait between checking for pir setting in sec
 time_between_pir = 1
@@ -29,17 +28,21 @@ pir = MotionSensor(26)
 # Debug setting - increase value to print status messages whilst running
 # debug=0 will only display errors
 debug = 0
-# What level to log to file (less noisy than debug)
+# What level to log to file (1 = less noisy than debug 1)
+# Level 3+ is going to be very noisy
 log_level = 1
 
 def readConfig (config_file):
-    global active_message
+    global active_message, future_message_change
     # Reset active_message and future_message_change
     active_message = None
     future_message_change = 1440
     
     if (debug > 0):
         print ("Reading config file")
+        
+    if (log_level > 0):
+        logMessage ("Reading config file")
     
     fp = open(config_file, "r")
     current_entry = {}
@@ -88,7 +91,6 @@ def readConfig (config_file):
             
             # Should this be current active one (if so then don't read anymore entries)
             if (this_message.date_time_valid()):
-                #print ("Found active entry")
                 # Make this active
                 active_message = copy.copy(this_message)
                 # update time next check if less then next message
@@ -138,12 +140,6 @@ def startLog ():
     if (log_file == ""):
         log_level = 0
         return
-    path = pathlib.Path(log_file)
-    # File does not exist so create 
-    if (not path.is_file()):
-            fp = open(log_file, "w")
-            fp.write (datetime.now().isoformat()+": "+Creating new log file+"\n")
-            fp.close()
     # Write to log 
     logMessage ("Application started")
         
@@ -177,11 +173,12 @@ def writeDisableConfig ():
     fp.close()
 
 def main():
+    startLog()
     time_read = datetime.min
     while True:
         
         # read the config file
-        # reread if it's changed or when time has expired
+        # reread if time has expired
         if (time_read + timedelta(minutes=future_message_change) < datetime.now()):
             #print ("Reading config file")
             # reset active_message - readConfig will replace if there is an active message
@@ -193,6 +190,9 @@ def main():
             if (debug > 0):
                 print ("No active message")
             writeDisableConfig()
+            # log sleep time
+            if (log_level > 2):
+                logMessage ("Sleeping for "+str(future_message_change*60)+ "seconds (not active)")
             # set sleep time to next config check time
             sleep (future_message_change * 60)
         else:
@@ -207,12 +207,21 @@ def main():
                     if (debug > 1):
                         print ("Motion detected")
                     if (active_message.pir_ontime != 0):
+                        # log sleep time
+                        if (log_level > 2):
+                            logMessage ("Sleeping for "+str(active_message.pir_ontime/1000)+ "seconds (motion detected")
                         sleep(active_message.pir_ontime/1000)
                 else:
                     writeConfig (False)
+                    # log sleep time
+                    if (log_level > 2):
+                        logMessage ("Sleeping for "+str(time_between_pir)+ "seconds (pir delay)")
                     sleep (time_between_pir)
             else:
                 writeConfig (False)
+                # log sleep time
+                if (log_level > 2):
+                    logMessage ("Sleeping for "+str(future_message_change*60)+ "seconds (not pir)")
                 sleep (future_message_change * 60)
                 
 
