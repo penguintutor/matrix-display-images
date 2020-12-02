@@ -18,10 +18,12 @@ log_file = "/home/pi/matrix-display-images/matrix-messages/log.txt"
 time_between_pir = 1
 
 active_message = None
+
 # Aim of future_message_start is just to determine when next to re-read
-# config file - so set at maximum 24 hours (minutes)
+# config file - so set at maximum 12 hours (minutes)
 # if config gives a sooner value then change later
-future_message_change = 1440
+max_delay_check = 720       # maximim before checking again
+future_message_change = max_delay_check
 
 pir = MotionSensor(26)
 
@@ -36,7 +38,7 @@ def readConfig (config_file):
     global active_message, future_message_change
     # Reset active_message and future_message_change
     active_message = None
-    future_message_change = 1440
+    future_message_change = max_delay_check
     
     if (debug > 0):
         print ("Reading config file")
@@ -173,6 +175,7 @@ def writeDisableConfig ():
     fp.close()
 
 def main():
+    global active_message, future_message_change
     startLog()
     time_read = datetime.min
     while True:
