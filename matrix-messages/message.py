@@ -144,12 +144,9 @@ class Message:
             # If not then ends tomorrow
             # seconds until end of today
             seconds_future_today = (datetime.combine(today.date(), time(23,59,59)) - today).total_seconds() 
-            #print ("time in seconds today is "+str(seconds_future_today))
             # plus seconds to time tommorow
             seconds_future = seconds_future_today + (datetime.combine(today.date(), time(0,0,0)) - datetime.combine(today.date(), self.end_time)).seconds
-        #print ("time in seconds "+str(seconds_future))
         minutes_future = seconds_future // 60
-        #print ("time in seconds is "+str(minutes_future))
         if (minutes_future < 1440):
             return minutes_future
         return 1440
@@ -188,7 +185,7 @@ class Message:
         return False
 
 
-    # Gives a multiine summary of object
+    # Gives a multiline summary of object
     def to_string (self):
         return_string = "Object summary\n"
         return_string += "title=" + self.title + "\n"

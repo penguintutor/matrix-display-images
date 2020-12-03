@@ -183,7 +183,6 @@ def main():
         # read the config file
         # reread if time has expired
         if (time_read + timedelta(minutes=future_message_change) < datetime.now()):
-            #print ("Reading config file")
             # reset active_message - readConfig will replace if there is an active message
             active_message == None
             readConfig (config_file)
@@ -194,7 +193,7 @@ def main():
                 print ("No active message")
             writeDisableConfig()
             # log sleep time
-            if (log_level > 2):
+            if (log_level > 1):
                 logMessage ("Sleeping for "+str(future_message_change*60)+ "seconds (not active)")
             # set sleep time to next config check time
             sleep (future_message_change * 60)
@@ -203,11 +202,11 @@ def main():
                 print ("Active message is "+active_message.title)
         
             if active_message.pir_enable:
-                if (debug > 1):
+                if (debug > 2):
                     print ("Checking pir")
                 if pir.motion_detected == True:
                     writeConfig (True)
-                    if (debug > 1):
+                    if (debug > 2):
                         print ("Motion detected")
                     if (active_message.pir_ontime != 0):
                         # log sleep time
@@ -216,12 +215,20 @@ def main():
                         sleep(active_message.pir_ontime/1000)
                 else:
                     writeConfig (False)
+                    
                     # log sleep time
                     if (log_level > 2):
                         logMessage ("Sleeping for "+str(time_between_pir)+ "seconds (pir delay)")
                     sleep (time_between_pir)
             else:
                 writeConfig (False)
+                
+                # Catch any errors with sleep time - should not happen - check in 1 second
+                if (future_message_change <=0 ):
+                    future_message_change = 1
+                    if (log_level > 0):
+                        logMessage ("Error - invalid sleep time "+str(future_message_change)+"minutes - active message "+active_message.title)
+                        
                 # log sleep time
                 if (log_level > 2):
                     logMessage ("Sleeping for "+str(future_message_change*60)+ "seconds (not pir)")
